@@ -112,7 +112,7 @@ namespace Orbwalker
             }
             ImGuiEx.Text($"滑步模式");
             ImGuiComponents.HelpMarker("在两种滑步锁模式中切换。\n" +
-                                       "\"Slidecast\"是默认模式，它只是简单地阻止玩家在非滑步窗口期的读条中的移动，直到滑步窗口。多数情况下，在第一次读条中，你必须保持静止。" +
+                                       "\"Slidecast\"是默认模式，它只是简单地阻止玩家在非滑步窗口期的读条中的移动，直到滑步窗口。多数情况下，在第一次读条中，你必须保持静止。\n" +
                                        "\"Slidelock\"模式则是一直禁用玩家在战斗中的移动，只允许在滑步窗口中移动。启用该模式后，按下移动的释放键是唯一能够启用移动的方法。");
             Spacing();
             if (ImGui.RadioButton("Slidecast", !C.ForceStopMoveCombat))
