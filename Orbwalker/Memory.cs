@@ -52,7 +52,7 @@ namespace Orbwalker
                 {
                     InternalLog.Verbose($"{type}, {acId}, {target}");
 
-                    if (Svc.Data.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(acId).NotNull(out var sheetAct) && sheetAct.TargetArea && sheetAct.Cast100ms > 0)
+                    if (Svc.Data.GetExcelSheet<Lumina.Excel.Sheets.Action>().GetRow(acId).NotNull(out var sheetAct) && sheetAct.TargetArea && sheetAct.Cast100ms > 0)
                         P.BlockMovementUntil = Environment.TickCount64 + (long)(P.Config.GroundedHold * 1000);
 
                     // was ActionType.Spell before, changed because outdated
@@ -112,7 +112,7 @@ namespace Orbwalker
 
 
         delegate byte InputData_IsInputIDKeyHeldDelegate(nint a1, int key);
-        [Signature("E8 ?? ?? ?? ?? 84 DB 0F B6 D0", DetourName = nameof(InputData_IsInputIDKeyHeldDetour), Fallibility = Fallibility.Infallible)]
+        [Signature("E8 ?? ?? ?? ?? 84 DB 44 0F B6 C0", DetourName = nameof(InputData_IsInputIDKeyHeldDetour), Fallibility = Fallibility.Infallible)]
         Hook<InputData_IsInputIDKeyHeldDelegate> InputData_IsInputIDKeyHeldHook;
         byte InputData_IsInputIDKeyHeldDetour(nint a1, int key)
         {
