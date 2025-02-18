@@ -19,10 +19,17 @@ namespace Orbwalker
         internal static void Draw()
         {
             ImGuiEx.EzTabBar("Default",
-                ("Settings", Settings, null, true),
-                ("Classes/Jobs", Jobs, null, true),
-                ("Extras", Extras, null, true),
-                ("About", () => AboutTab.Draw(P.Name), null, true),
+                ("设置", Settings, null, true),
+                ("职业", Jobs, null, true),
+                ("额外", Extras, null, true),
+                ("关于", () =>
+                {
+                    ImGuiEx.LineCentered("本地化", delegate
+                    {
+                        ImGuiEx.Text("本地化: KirisameVanilla");
+                    });
+                    AboutTab.Draw(P.Name);
+                }, null, true),
                 ("Debug".NullWhenFalse(C.Debug), Debug, ImGuiColors.DalamudGrey3, true),
                 InternalLog.ImGuiTab(C.Debug)
 
@@ -31,30 +38,30 @@ namespace Orbwalker
 
         static void Extras()
         {
-
-            ImGuiEx.Text($"Job Specific Options");
+            ImGui.TextColored(new(1f,0f,0f,1f),"你仍然需要在职业中选择对应职业");
+            ImGuiEx.Text($"职业额外选项");
             ImGuiGroup.BeginGroupBox();
-            ImGuiEx.Text($"Block movement when these actions are active:");
-            ImGuiEx.Spacing(); ImGui.Checkbox("Passage of Arms (PLD)", ref C.PreventPassage);
-            ImGuiEx.Spacing(); ImGui.Checkbox("Ten Chi Jin (NIN)", ref C.PreventTCJ);
-            ImGuiEx.Spacing(); ImGui.Checkbox("Flamethrower (MCH)", ref C.PreventFlame);
-            ImGuiEx.Spacing(); ImGui.Checkbox("Improvisation (DNC)", ref C.PreventImprov);
-			ImGuiEx.Spacing(); ImGui.Checkbox("Phantom Flurry (BLU)", ref C.PreventPhantom);
+            ImGuiEx.Text($"在使用以下技能时启用滑步锁:");
+            ImGuiEx.Spacing(); ImGui.Checkbox("武装戍卫（骑士）", ref C.PreventPassage);
+            ImGuiEx.Spacing(); ImGui.Checkbox("天地人（忍者）", ref C.PreventTCJ);
+            ImGuiEx.Spacing(); ImGui.Checkbox("火焰喷射器（机工士）", ref C.PreventFlame);
+            ImGuiEx.Spacing(); ImGui.Checkbox("即兴表演（舞者）", ref C.PreventImprov);
+			ImGuiEx.Spacing(); ImGui.Checkbox("鬼人乱舞（鬼宿脚）（青魔法师）", ref C.PreventPhantom);
 			ImGuiGroup.EndGroupBox();
 
 
-            ImGuiEx.Text($"Miscellaneous Casts");
+            ImGuiEx.Text($"各种读条");
             ImGuiGroup.BeginGroupBox();
-            ImGuiEx.Text($"Block movement when these actions are being casted:");
-            ImGuiEx.Spacing(); ImGui.Checkbox("Teleport", ref C.BlockTP);
-            ImGuiEx.Spacing(); ImGui.Checkbox("Return", ref C.BlockReturn);
-            ImGuiEx.Spacing(); ImGui.Checkbox("Mount", ref C.BlockMount);
+            ImGuiEx.Text($"在使用以下技能时启用滑步锁:");
+            ImGuiEx.Spacing(); ImGui.Checkbox("传送", ref C.BlockTP);
+            ImGuiEx.Spacing(); ImGui.Checkbox("返回", ref C.BlockReturn);
+            ImGuiEx.Spacing(); ImGui.Checkbox("坐骑", ref C.BlockMount);
             ImGuiGroup.EndGroupBox();
 
-            ImGuiEx.Text($"PvP Settings");
+            ImGuiEx.Text($"PvP设置");
             ImGuiGroup.BeginGroupBox();
-            ImGui.Checkbox($"Enable PvP Orbwalking", ref C.PVP);
-            ImGuiComponents.HelpMarker("Allows use of Orbwalker when in PvP game modes such as Frontlines and Crystaline Conflict. This is considered an unfair advantage over other players so use at your own risk (and conscious).");
+            ImGui.Checkbox($"在PvP中使用滑步", ref C.PVP);
+            ImGuiComponents.HelpMarker("在PvP模式中（如纷争前线和水晶冲突）启用滑步锁。使用后果自负。");
             ImGuiGroup.EndGroupBox();
         }
 
@@ -87,24 +94,26 @@ namespace Orbwalker
             }
             ImGui.SetCursorPos(cur);
 
-            if (ImGui.Checkbox($"Enable Orbwalker", ref C.Enabled))
+            if (ImGui.Checkbox($"启用", ref C.Enabled))
             {
                 P.Memory.EnableDisableBuffer();
             }
-            ImGuiEx.Text($"Movement");
+            ImGuiEx.Text($"移动");
             ImGuiGroup.BeginGroupBox();
-            ImGuiEx.Text($"Slidecast Window Calibration:");
-            ImGuiComponents.HelpMarker("Switches between automatic slidecast window calibration or allows you to set a manual value. Automatic mode is fully reliable but will always result in smaller slidecast windows than you can manually configure based on spellspeed/network latency.");
+            ImGuiEx.Text($"滑步窗口校准:");
+            ImGuiComponents.HelpMarker("切换校准滑步窗口的模式。自动模式较为保守，校准的滑步窗口比根据网络延迟手动调节的要延后一点。");
             Spacing(!C.IsSlideAuto);
-            ImGuiEx.RadioButtonBool("Automatic", "Manual", ref C.IsSlideAuto, true);
+            ImGuiEx.RadioButtonBool("自动", "手动", ref C.IsSlideAuto, true);
             if (!C.IsSlideAuto)
             {
                 Spacing();
                 ImGui.SetNextItemWidth(200f);
-                ImGui.SliderFloat("Unlock at, s", ref C.Threshold, 0.1f, 1f);
+                ImGui.SliderFloat("滑步锁阈值, 秒", ref C.Threshold, 0.1f, 1f);
             }
-            ImGuiEx.Text($"Orbwalking Mode:");
-            ImGuiComponents.HelpMarker("Switch between the two modes. \"Slidecast\" mode is the default and simply prevents player movement until the slidecast window is available, locking movement again to begin the next cast. You must be stationary for the first cast in most cases. \"Slidelock\" mode on the otherhand permanently locks the player from moving while in combat and only allows for movement during the slidecast window. The movement release key is the only way to enable movement when this mode is used.");
+            ImGuiEx.Text($"滑步模式");
+            ImGuiComponents.HelpMarker("在两种滑步锁模式中切换。\n" +
+                                       "\"Slidecast\"是默认模式，它只是简单地阻止玩家在非滑步窗口期的读条中的移动，直到滑步窗口。多数情况下，在第一次读条中，你必须保持静止。\n" +
+                                       "\"Slidelock\"模式则是一直禁用玩家在战斗中的移动，只允许在滑步窗口中移动。启用该模式后，按下移动的释放键是唯一能够启用移动的方法。");
             Spacing();
             if (ImGui.RadioButton("Slidecast", !C.ForceStopMoveCombat))
             {
@@ -116,32 +125,32 @@ namespace Orbwalker
                 C.ForceStopMoveCombat = true;
             }
 
-            if (ImGui.Checkbox($"Buffer Initial Cast", ref C.Buffer))
+            if (ImGui.Checkbox($"缓存第一次读条", ref C.Buffer))
             {
                 P.Memory.EnableDisableBuffer();
             }
-            ImGuiComponents.HelpMarker($"Removes the requirement for the player to be stationary when channeling the first cast by buffering it until movement is halted. This setting may cause strange behavior with plugins such as Redirect or ReAction, or prevent their options from working at all, be warned!");
+            ImGuiComponents.HelpMarker($"通过缓存第一次读条直到移动停止，削除了玩家在引导第一次读条时保持静止的要求。此设置可能会导致 Redirect 或 ReAction 等插件出现奇怪的行为，或导致其选项完全无法工作，请注意！");
 
             ImGui.SetNextItemWidth(200f);
-            ImGui.Checkbox("Controller Mode", ref C.ControllerMode);
+            ImGui.Checkbox("手柄模式", ref C.ControllerMode);
 
             if (C.ControllerMode)
-                DrawKeybind("Movement Release Button", ref C.ReleaseButton);
+                DrawKeybind("移动的释放按钮", ref C.ReleaseButton);
             else
-                DrawKeybind("Movement Release Key", ref C.ReleaseKey);
-            ImGuiComponents.HelpMarker("Bind a key to instantly unlock player movement and cancel any channeling cast. Note that movement is only enabled whilst the key is held, therefore a mouse button is recommended.");
-            ImGui.Checkbox($"Permanently Release", ref C.UnlockPermanently);
-            ImGuiComponents.HelpMarker("Releases player movement - used primarily by the release key setting above.");
-            ImGuiEx.Text($"Release Key Mode:");
-            ImGuiComponents.HelpMarker("Switches the movement release key from needing to be held, to becoming a toggle.");
+                DrawKeybind("移动的释放键", ref C.ReleaseKey);
+            ImGuiComponents.HelpMarker("绑定一个按键即可立即解锁玩家移动并取消任何引导施法。请注意，只有按住按键时才可以移动，因此建议使用鼠标按钮。");
+            ImGui.Checkbox($"永久释放", ref C.UnlockPermanently);
+            ImGuiComponents.HelpMarker("释放玩家的移动——该设置主要由上方的释放键使用");
+            ImGuiEx.Text($"释放键模式:");
+            ImGuiComponents.HelpMarker("在按住和点击切换中切换。");
             Spacing();
-            ImGuiEx.RadioButtonBool("Hold", "Toggle", ref C.IsHoldToRelease, true);
+            ImGuiEx.RadioButtonBool("按住", "点击切换", ref C.IsHoldToRelease, true);
 
             if (!C.ControllerMode)
             {
-                ImGui.Checkbox($"Enable Mouse Button Release", ref C.DisableMouseDisabling);
-                ImGuiComponents.HelpMarker("Allows emergency movement via holding down MB1 and MB2 simultaneously.");
-                ImGuiEx.TextV($"Movement keys:");
+                ImGui.Checkbox($"通过鼠标按键释放", ref C.DisableMouseDisabling);
+                ImGuiComponents.HelpMarker("紧急情况下同时按住鼠标左键和右键来进行移动");
+                ImGuiEx.TextV($"移动的方向键:");
                 ImGui.SameLine();
                 ImGuiEx.SetNextItemWidth(0.8f);
                 if (ImGui.BeginCombo($"##movekeys", $"{C.MoveKeys.Print()}"))
@@ -155,7 +164,7 @@ namespace Orbwalker
             }
 
             ImGui.PushItemWidth(300);
-            ImGuiEx.TextV($"Ground Targeting Hold (seconds):");
+            ImGuiEx.TextV($"保持地面指向性读条 (seconds):");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(100f);
 
@@ -168,34 +177,34 @@ namespace Orbwalker
                     P.Config.GroundedHold = (float)Math.Round(P.Config.GroundedHold, 2, MidpointRounding.ToNegativeInfinity);
             }
 
-            ImGuiComponents.HelpMarker($"Spells which have cast times that are also targeted on the ground (mainly found in BLU) register casting as the target appears, and will cancel cast times if moving as it's confirmed. " +
-                $"This option forces your character to stop as the target appears for however long as to not cancel the cast pre-emptively.");
+            ImGuiComponents.HelpMarker($"如果读条以地面为目标（主要是青魔法师），则当目标出现时会记录施法时间，如果确认移动，则会取消施法。 " +
+                $"该选项会强制您的角色在目标出现时停止，只要不提前取消施法。");
 
             ImGuiGroup.EndGroupBox();
 
-            ImGuiEx.Text($"Overlay");
+            ImGuiEx.Text($"外置UI");
             ImGuiGroup.BeginGroupBox();
 
-            ImGuiEx.Text($"Display Overlay");
-            ImGuiComponents.HelpMarker("Choose when to display the Orbwalker overlay when enabled.");
-            Spacing(true); ImGui.Checkbox($"In Combat", ref C.DisplayBattle);
-            Spacing(true); ImGui.Checkbox($"In Duty", ref C.DisplayDuty);
-            Spacing(true); ImGui.Checkbox($"Always", ref C.DisplayAlways);
+            ImGuiEx.Text($"展示外置UI");
+            ImGuiComponents.HelpMarker("选择展示UI的条件");
+            Spacing(true); ImGui.Checkbox($"在战斗中", ref C.DisplayBattle);
+            Spacing(true); ImGui.Checkbox($"在任务中", ref C.DisplayDuty);
+            Spacing(true); ImGui.Checkbox($"常驻", ref C.DisplayAlways);
             Spacing();
             ImGui.SetNextItemWidth(100f);
-            ImGui.SliderFloat($"Overlay scale", ref C.SizeMod.ValidateRange(0.5f, 2f), 0.8f, 1.2f);
+            ImGui.SliderFloat($"外置UI缩放比例", ref C.SizeMod.ValidateRange(0.5f, 2f), 0.8f, 1.2f);
 
             ImGuiGroup.EndGroupBox();
         }
 
         static void Jobs()
         {
-            ImGuiEx.Text($"Jobs");
-            ImGuiComponents.HelpMarker("Select the jobs you wish to use Orbwalker's movement locking features on. Not all jobs have cast times, but if you have the extra features enabled for the general actions it will apply to those jobs.");
+            ImGuiEx.Text($"职业");
+            ImGuiComponents.HelpMarker("选择您希望使用滑步锁定的职业。并非所有职业都有读条技能，但如果您为一些技能启用了额外功能（如忍者的天地人），这些技能的滑步锁也会启用。");
             ImGuiGroup.BeginGroupBox();
-            ImGuiEx.TextV("Toggle:");
+            ImGuiEx.TextV("一键启用/禁用:");
             ImGui.SameLine();
-            if (ImGui.Button("All"))
+            if (ImGui.Button("所有职业"))
             {
                 var jobs = Enum.GetValues<Job>().Where(x => x != Job.ADV);
                 var b = jobs.All(x => C.EnabledJobs.TryGetValue(x, out var v) && v);
@@ -205,7 +214,7 @@ namespace Orbwalker
                 }
             }
             ImGui.SameLine();
-            if (ImGui.Button($"Casters"))
+            if (ImGui.Button($"有咏唱的职业"))
             {
                 var b = Data.CastingJobs.All(x => C.EnabledJobs.TryGetValue(x, out var v) && v);
                 foreach (var x in Data.CastingJobs)
@@ -213,8 +222,9 @@ namespace Orbwalker
                     C.EnabledJobs[x] = !b;
                 }
             }
+            /*
             ImGui.SameLine();
-            if (ImGui.Button("DoL/DoH"))
+            if (ImGui.Button("生采职业"))
             {
                 var jobs = Svc.Data.GetExcelSheet<ClassJob>().Where(x => x.ClassJobCategory.Value.RowId.EqualsAny<uint>(33, 32)).Select(x => x.RowId).Cast<Job>();
                 var b = jobs.All(x => C.EnabledJobs.TryGetValue(x, out var v) && v);
@@ -223,6 +233,7 @@ namespace Orbwalker
                     C.EnabledJobs[x] = !b;
                 }
             }
+            */
             ImGui.Separator();
             ImGui.Columns(5, "###JobGrid", false);
             foreach (var job in Enum.GetValues<Job>())
@@ -231,8 +242,9 @@ namespace Orbwalker
                 if (!P.Config.EnabledJobs.ContainsKey(job))
                     P.Config.EnabledJobs[job] = false;
 
+                if (!JobNames.ContainsKey(job) || (JobNames.ContainsKey(job) && JobNames[job] == "")) continue;
                 bool val = P.Config.EnabledJobs[job];
-                if (ImGui.Checkbox($"{job}", ref val))
+                if (ImGui.Checkbox($"{JobNames[job]}", ref val))
                 {
                     if (val)
                     {
@@ -345,7 +357,7 @@ namespace Orbwalker
             {
                 if (text == KeyInputActive)
                 {
-                    ImGuiEx.Text(ImGuiColors.DalamudYellow, $"Now press new key...");
+                    ImGuiEx.Text(ImGuiColors.DalamudYellow, $"等待按下按键...");
                     foreach (var x in Enum.GetValues<Keys>())
                     {
                         if (IsKeyPressed((int) x))
@@ -359,11 +371,11 @@ namespace Orbwalker
                 }
                 else
                 {
-                    if (ImGui.Selectable("Auto-detect new key", false, ImGuiSelectableFlags.DontClosePopups))
+                    if (ImGui.Selectable("自动检测新按键", false, ImGuiSelectableFlags.DontClosePopups))
                     {
                         KeyInputActive = text;
                     }
-                    ImGuiEx.Text($"Select key manually:");
+                    ImGuiEx.Text($"手动选择按键:");
                     ImGuiEx.SetNextItemFullWidth();
                     ImGuiEx.EnumCombo("##selkeyman", ref key);
                 }
@@ -401,7 +413,7 @@ namespace Orbwalker
             {
                 if (text == KeyInputActive)
                 {
-                    ImGuiEx.Text(ImGuiColors.DalamudYellow, $"Now press new key...");
+                    ImGuiEx.Text(ImGuiColors.DalamudYellow, $"等待按下按键...");
                     foreach (var x in GamePad.ControllerButtons)
                     {
                         if (GamePad.IsButtonPressed(x.Key))
@@ -415,11 +427,11 @@ namespace Orbwalker
                 }
                 else
                 {
-                    if (ImGui.Selectable("Auto-detect new key", false, ImGuiSelectableFlags.DontClosePopups))
+                    if (ImGui.Selectable("自动检测新按键", false, ImGuiSelectableFlags.DontClosePopups))
                     {
                         KeyInputActive = text;
                     }
-                    ImGuiEx.Text($"Select key manually:");
+                    ImGuiEx.Text($"手动选择按键:");
                     ImGuiEx.SetNextItemFullWidth();
                     if (ImGui.BeginCombo("##selkeyman", GamePad.ControllerButtons[key]))
                     {
@@ -453,5 +465,51 @@ namespace Orbwalker
             ImGui.PopID();
             return ret;
         }
+
+        private static readonly Dictionary<Job, string> JobNames = new()
+        {
+            { Job.GLA, "剑术师" },
+            { Job.PGL, "格斗家" },
+            { Job.MRD, "斧术师" },
+            { Job.LNC, "枪术师" },
+            { Job.ARC, "弓箭手" },
+            { Job.CNJ, "幻术师"},
+            { Job.THM, "咒术师"},
+            { Job.CRP, ""},
+            { Job.BSM, ""},
+            { Job.ARM, ""},
+            { Job.GSM, ""},
+            { Job.LTW, ""},
+            { Job.WVR, ""},
+            { Job.ALC, ""},
+            { Job.CUL, ""},
+            { Job.MIN, ""},
+            { Job.BTN, ""},
+            { Job.FSH, ""},
+            { Job.PLD, "骑士"},
+            { Job.MNK, "武僧"},
+            { Job.WAR, "战士"},
+            { Job.DRG, "龙骑士"},
+            { Job.BRD, "吟游诗人"},
+            { Job.WHM, "白魔法师"},
+            { Job.BLM, "黑魔法师"},
+            { Job.ACN, "秘术师"},
+            { Job.SMN, "召唤师"},
+            { Job.SCH, "学者"},
+            { Job.ROG, "双剑师"},
+            { Job.NIN, "忍者"},
+            { Job.MCH, "机工士"},
+            { Job.DRK, "暗黑骑士"},
+            { Job.AST, "占星术士"},
+            { Job.SAM, "武士"},
+            { Job.RDM, "赤魔法师"},
+            { Job.BLU, "青魔法师"},
+            { Job.GNB, "绝枪战士"},
+            { Job.DNC, "舞者"},
+            { Job.RPR, "钐镰客"},
+            { Job.SGE, "贤者"},
+            { Job.VPR, "蝰蛇武士"},
+            { Job.PCT, "绘灵法师"}
+        };
     }
 }
